@@ -49,6 +49,14 @@ class BaseChain extends IBlockchain {
     }
 
     /**
+     * @param {Block} block
+     * @returns {Promise<Array.<Block>>}
+     */
+    async getSuccessorBlocks(block) {
+        return this._store.getSuccessorBlocks(block);
+    }
+
+    /**
      * @returns {Promise.<Array.<Hash>>}
      */
     async getBlockLocators() {
@@ -91,9 +99,10 @@ class BaseChain extends IBlockchain {
     /**
      * Computes the target value for the block after the given block or the head of this chain if no block is given.
      * @param {Block} [block]
+     * @param {Block} [next]
      * @returns {Promise.<number>}
      */
-    async getNextTarget(block) {
+    async getNextTarget(block, next) {
         /** @type {ChainData} */
         let headData;
         if (block) {
@@ -103,6 +112,11 @@ class BaseChain extends IBlockchain {
         } else {
             block = this.head;
             headData = this._mainChain;
+        }
+
+        if (next) {
+            headData = await headData.nextChainData(next);
+            block = next;
         }
 
         // Retrieve the timestamp of the block that appears DIFFICULTY_BLOCK_WINDOW blocks before the given block in the chain.
